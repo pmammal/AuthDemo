@@ -1,3 +1,4 @@
+//dependencies
 const express = require('express');
 const app = express();
 const mongoose = require('mongoose');
@@ -5,6 +6,7 @@ const User = require('./models/user');
 const bcrypt = require('bcrypt');
 const session = require('express-session');
 
+//mongoose
 mongoose
 	.connect('mongodb://localhost:27017/authDemo', { useNewUrlParser: true, useUnifiedTopology: true })
 	.then(() => {
@@ -15,12 +17,23 @@ mongoose
 		console.log(err);
 	});
 
+//set
 app.set('view engine', 'ejs');
 app.set('views', 'views');
 
+//use
 app.use(express.urlencoded({ extended: true }));
 app.use(session({ secret: 'notagoodsecret' }));
 
+//middleware
+const requireLogin = (req, res, next) => {
+	if (!req.session.user_id) {
+		return res.redirect('/login');
+	}
+	next();
+};
+
+//routes
 app.get('/', (req, res) => {
 	res.send('homepage');
 });
@@ -61,13 +74,11 @@ app.post('/logout', (req, res) => {
 	res.redirect('/login');
 });
 
-app.get('/secret', (req, res) => {
-	if (!req.session.user_id) {
-		return res.redirect('/login');
-	}
+app.get('/secret', requireLogin, (req, res) => {
 	res.render('secret');
 });
 
+//server
 app.listen(3000, () => {
 	console.log('serving your app');
 });
